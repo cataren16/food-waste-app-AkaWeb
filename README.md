@@ -4,7 +4,7 @@ Interactive and community-based food waste app group project developed using Rea
 # Echipa - AkaWeb 
 - Răsmeriță Andra, Renghiuț Cătălina, Roșoiu Anca
 
-Tema alocată - Food Waste App
+# Tema alocată - Food Waste App
 
 # Obiectiv 
 - Realizarea unei aplicații web cu scopul de a încuraja utilizatorii să conștientizeze risipa de alimente într-un mod distractiv și bazat pe comunitate
