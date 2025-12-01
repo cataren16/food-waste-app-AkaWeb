@@ -2,13 +2,17 @@ const express = require('express');
 const db = require('./models'); 
 const friendRoutes = require('./routes/friendRoutes');
 const authRoutes = require('./routes/authRoutes');
+const productRoutes = require('./routes/productRoutes');
 const userRoutes = require('./routes/userRoutes');
+
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
-app.use('/api/friends',friendRoutes);
+
+app.use('/api/friends', friendRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 
 app.get('/', (req, res) => {

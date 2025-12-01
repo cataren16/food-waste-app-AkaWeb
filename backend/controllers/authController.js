@@ -23,7 +23,7 @@ exports.login = async (req, res) => {
     try {
         const { email, parola } = req.body;
         const userGasit = await User.findOne({ where: { email } });
-
+  
         if (!userGasit) {
             return res.status(404).json({ message: "Utilizatorul nu a fost găsit!" });
         }
