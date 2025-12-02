@@ -4,12 +4,14 @@ const friendRoutes = require('./routes/friendRoutes');
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const userRoutes = require('./routes/userRoutes');
+const cors = require('cors');
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
 
+app.use(cors());
 app.use('/api/friends', friendRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
