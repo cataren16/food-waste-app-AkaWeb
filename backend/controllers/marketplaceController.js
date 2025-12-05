@@ -213,7 +213,7 @@ exports.getIncomingClaims = async(req,res)=>{
                 const cantitateRamasa = cantitateDisponibila - solicitare.nr_bucati;
 
                 await product.update({
-                    disponibil: cantitateRamasa === 0
+                    disponibil: cantitateRamasa > 0
                 });
 
                 await Tranzactie.create({
