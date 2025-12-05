@@ -1,4 +1,4 @@
-const { User } = require('../models');
+const { User , Solicitare} = require('../models');
 
 exports.getProfile = async (req, res) => {
     try {
@@ -12,7 +12,18 @@ exports.getProfile = async (req, res) => {
             return res.status(404).json({ message: "Utilizatorul nu a fost găsit" });
         }
 
-        res.status(200).json(user);
+        const pointsCount = await Solicitare.count({
+            where:{id_solicitant:id,
+                status_solicitare:'completed'
+            }
+        });
+
+        const finalData ={
+            ...user.toJSON(),
+            points:pointsCount
+        };
+
+        res.status(200).json(finalData);
     } catch (error) {
         res.status(500).json({ message: "Eroare server", error: error.message });
     }
