@@ -79,6 +79,17 @@ Săptămâna 7 - Funcționalitate grupuri de prieteni
 Săptămâna 8 - Polishing și testare
 
 
+# Serviciu RESTful
+
+IMPORTANT: Testarea backend-ului necesita instalarea Docker pentru desktop. Pentru vizualizarea bazei de date locale se poate opta pentru o extensie VSCode (SQLite Viewer)
+
+Rulati intr-un terminal de tip Git Bash urmatoarele comenzi in ordine:
+- pornire backend (port:3000) + frontend (port:5173): docker compose up --build
+- populare baza de date locala SQLite: docker compose exec backend node seed.js
+- inchidere backend + frontend : docker compose down
+
+Rutele se gasesc sub prefixul: http://localhost:3000/api/
+
 
 
 
