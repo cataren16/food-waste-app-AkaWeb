@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect , useState} from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 
 import Login from './components/auth/Login';
@@ -11,6 +11,10 @@ const Groups = () => <div className="text-2xl font-bold">Aici sunt Grupurile (Cu
 
 
 const DashboardLayout = () => {
+  const [refreshTrigger, setRefreshTrigger]=useState(0);
+const triggerRefresh=()=>{
+  setRefreshTrigger(prev=>prev+1);
+};
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
       {}
@@ -27,6 +31,7 @@ const DashboardLayout = () => {
 };
 
 function App() {
+  
   return (
     <Routes>
       {}

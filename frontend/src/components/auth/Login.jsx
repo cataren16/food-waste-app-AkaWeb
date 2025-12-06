@@ -22,12 +22,28 @@ const Login = () => {
       });
       const data = await response.json();
       if (response.ok) {
-        alert("Autentificare reușită! 🌿");
+        if (data.token) {
+            
+            localStorage.setItem('token', data.token);
+            
+            if (data.user) {
+                localStorage.setItem('user', JSON.stringify(data.user));
+            }
+
+            alert("Autentificare reușită! 🌿");
+            navigate('/feed'); 
+        } else {
+            console.error("4. [Eroare] Login reușit dar lipsește token-ul din răspuns!");
+            setError('Eroare internă: Serverul nu a trimis token-ul.');
+        }
+
       } else {
+        // Aici ajungem dacă parola e greșită sau userul nu există
         setError(data.message || 'Date incorecte');
       }
     } catch (err) {
-      setError('Eroare de server.');
+      console.error("5. [Eroare Rețea]", err);
+      setError('Nu s-a putut conecta la server. Verifică dacă serverul (port 3000) este pornit.');
     }
   };
 

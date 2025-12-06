@@ -14,7 +14,7 @@ exports.getProfile = async (req, res) => {
 
         const pointsCount = await Solicitare.count({
             where:{id_solicitant:id,
-                status_solicitare:'completed'
+                status_solicitare:1
             }
         });
 

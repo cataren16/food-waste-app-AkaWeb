@@ -1,4 +1,5 @@
 const { User } = require('../models');
+const jwt = require('jsonwebtoken');
 
 exports.register = async (req, res) => {
     try {
@@ -31,14 +32,21 @@ exports.login = async (req, res) => {
             return res.status(401).json({ message: "Parolă incorectă!" });
         }
 
+        const cheiaMeaSecreta = "O_Fraza_Lunga_Si_Complicata_Pe_Care_Nu_O_Ghiceste_Nimeni_123!";
+
+
+        const token = jwt.sign(
+        { id: userGasit.id_utilizator, email: userGasit.email }, 
+         cheiaMeaSecreta, 
+        { expiresIn: '24h' } 
+        );
+
         return res.status(200).json({
             message: "Autentificare reușită!",
-            user: {
-                id: userGasit.id_utilizator,
-                nume: userGasit.nume,
-                email: userGasit.email
-            }
+            user:  { id: userGasit.id_utilizator, email: userGasit.email, nume:userGasit.nume,prenume:userGasit.prenume }, 
+            token: token 
         });
+        
     } catch (error) {
         res.status(500).json({ message: "Eroare server", error: error.message });
     }
