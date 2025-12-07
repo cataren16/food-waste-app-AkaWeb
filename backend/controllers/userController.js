@@ -1,4 +1,15 @@
-const { User , Solicitare} = require('../models');
+const { User, Solicitare } = require('../models');
+
+exports.getAllUsers = async (req, res) => {
+    try {
+        const users = await User.findAll({
+            attributes: { exclude: ['parola'] }
+        });
+        res.status(200).json(users);
+    } catch (error) {
+        res.status(500).json({ message: "Eroare server", error: error.message });
+    }
+};
 
 exports.getProfile = async (req, res) => {
     try {
@@ -13,14 +24,15 @@ exports.getProfile = async (req, res) => {
         }
 
         const pointsCount = await Solicitare.count({
-            where:{id_solicitant:id,
-                status_solicitare:1
+            where: {
+                id_solicitant: id,
+                status_solicitare: 1
             }
         });
 
-        const finalData ={
+        const finalData = {
             ...user.toJSON(),
-            points:pointsCount
+            points: pointsCount
         };
 
         res.status(200).json(finalData);

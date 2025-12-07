@@ -34,16 +34,22 @@ exports.login = async (req, res) => {
 
         const cheiaMeaSecreta = "O_Fraza_Lunga_Si_Complicata_Pe_Care_Nu_O_Ghiceste_Nimeni_123!";
 
-
         const token = jwt.sign(
-        { id: userGasit.id_utilizator, email: userGasit.email }, 
-         cheiaMeaSecreta, 
-        { expiresIn: '24h' } 
+            { id: userGasit.id_utilizator, email: userGasit.email }, 
+            cheiaMeaSecreta, 
+            { expiresIn: '24h' } 
         );
 
         return res.status(200).json({
             message: "Autentificare reușită!",
-            user:  { id: userGasit.id_utilizator, email: userGasit.email, nume:userGasit.nume,prenume:userGasit.prenume }, 
+            user: { 
+                id_utilizator: userGasit.id_utilizator, 
+                email: userGasit.email, 
+                nume: userGasit.nume,
+                prenume: userGasit.prenume,
+                descriere: userGasit.descriere,
+                avatar: userGasit.avatar
+            }, 
             token: token 
         });
         
