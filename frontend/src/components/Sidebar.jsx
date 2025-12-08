@@ -85,7 +85,7 @@ const Sidebar = ({ refreshTrigger, onOpenAddModal }) => {
             </div>
 
             <div className='hidden md:block pt-7'>
-                <GamificationCard count={totalProduse} />
+                <GamificationCard refreshTrigger={refreshTrigger} />
             </div>
             <div className='hidden md:block h-20 '></div>
             <div className='hidden md:block md:flex gap-2 px-2 py-5 text-gray-600 hover:text-emerald-600' onClick={handleLogout}>
