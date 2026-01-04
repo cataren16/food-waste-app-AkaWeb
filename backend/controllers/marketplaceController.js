@@ -41,10 +41,12 @@ exports.getFriendFeed = async (req, res) => {
 
         relevantUserIds = [...new Set(relevantUserIds)];
 
+        const today = new Date();
         const feedProducts = await Product.findAll({
             where: {
                 id_utilizator: { [Op.in]: relevantUserIds }, 
-                disponibil: true 
+                disponibil: true,
+                data_expirare: { [Op.gte]: today }
             },
             include: [
                 { 
@@ -55,7 +57,6 @@ exports.getFriendFeed = async (req, res) => {
             ],
             order: [['createdAt', 'DESC']] 
         });
-
         res.status(200).json(feedProducts);
 
     } catch (error) {
@@ -76,8 +77,9 @@ exports.claimProduct = async (req, res) => {
     try {
         const produs = await Product.findByPk(id_produs);
         
-        if (!produs || !produs.disponibil || produs.cantitate <= 0) {
-            return res.status(404).json({ message: "Ne pare rău, produsul tocmai s-a epuizat!" });
+        const today = new Date();
+        if (!produs || !produs.disponibil || produs.cantitate <= 0 || new Date(produs.data_expirare) < today) {
+            return res.status(404).json({ message: "Ne pare rău, produsul nu mai este disponibil sau a expirat!" });
         }
 
         if (nr_bucati > produs.cantitate) {
