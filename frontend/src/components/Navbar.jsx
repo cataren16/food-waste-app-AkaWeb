@@ -19,7 +19,9 @@ const Navbar = ()=>{
     const [loadingSentRequests, setLoadingSentRequests] = useState(false);
     const [friends, setFriends] = useState([]);
     const [loadingFriends, setLoadingFriends] = useState(false);
-
+    const [productNotifications, setProductNotifications] = useState([]);
+    const [isNotifyOpen, setIsNotifyOpen] = useState(false);
+    const notifyRef = useRef(null);
 
 
     const handleMobileOverlay = ()=>{
@@ -185,6 +187,16 @@ try { data = await res.json(); } catch {}
         return () => clearTimeout(timer);
     },[searchText]);
 
+    useEffect(() => {
+        const handleClickOutsideNotify = (event) => {
+            if (notifyRef.current && !notifyRef.current.contains(event.target)) {
+                setIsNotifyOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutsideNotify);
+        return () => document.removeEventListener('mousedown', handleClickOutsideNotify);
+    }, []);
+
     useEffect(()=>{
 
         const handleClickOutside = (event) =>{
@@ -282,10 +294,22 @@ try { data = await res.json(); } catch {}
   }
 };
 
-             
-           fetchCereriPrimite();
-fetchCereriTrimise();
-fetchFriends();
+    const fetchProductNotifications = async () => {
+        try {
+            const res = await fetch(`http://localhost:3000/api/marketplace/incoming-claims?userId=${id_eu}`);
+            const data = await res.json();
+            if (res.ok) {
+                setProductNotifications(data.filter(req => req.status_solicitare === 0));
+            }
+        } catch (err) {
+            console.error("Eroare notificări:", err);
+        }
+    };
+
+            fetchProductNotifications();
+            fetchCereriPrimite();
+            fetchCereriTrimise();
+            fetchFriends();
 
         }
     },[]);
@@ -315,10 +339,60 @@ loadingFriends={loadingFriends}></ResultList>
                      </div>
                 <div className='flex md:gap-9 items-center gap-3 '>
                      <Search className='md:hidden text-gray-500 hover:text-emerald-600' onClick={handleMobileOverlay}/>
-                   <div className='relative group'>
-                     <Bell className=' text-gray-500 group-hover:text-emerald-600'/>
-                     <Dot size={45} strokeWidth={3} className='absolute fill-red-500 text-red-500 -top-5 -right-4'/>
-                     </div>
+                <div className='relative' ref={notifyRef}>
+                    <button 
+                        onClick={() => setIsNotifyOpen(!isNotifyOpen)}
+                        className="relative group p-1 focus:outline-none flex items-center"
+                    >
+                        <Bell className={`transition-colors ${isNotifyOpen ? 'text-emerald-600' : 'text-gray-500 group-hover:text-emerald-600'}`} />
+                        
+                        {productNotifications.length > 0 && (
+                            <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 text-[10px] text-white items-center justify-center font-bold">
+                                    {productNotifications.length}
+                                </span>
+                            </span>
+                        )}
+                    </button>
+
+                    {isNotifyOpen && (
+                        <div className="absolute top-full mt-4 right-0 w-80 bg-white border border-gray-100 shadow-2xl rounded-2xl z-50 overflow-hidden animate-in fade-in zoom-in duration-200">
+                            <div className="p-4 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
+                                <h3 className="font-bold text-gray-800 text-sm">Solicitări Produse</h3>
+                                <span className="text-[10px] bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full font-bold">
+                                    {productNotifications.length} NOI
+                                </span>
+                            </div>
+                            <div className="max-h-64 overflow-y-auto">
+                                {productNotifications.length === 0 ? (
+                                    <p className="p-6 text-center text-gray-400 text-xs">Nicio solicitare nouă.</p>
+                                ) : (
+                                    productNotifications.map((n) => (
+                                        <div key={n.id_solicitare} className="p-4 border-b border-gray-50 hover:bg-emerald-50/30 transition-colors">
+                                            <p className="text-sm font-bold text-gray-800">
+                                                {n.Solicitant?.prenume} {n.Solicitant?.nume}
+                                            </p>
+                                            <p className="text-xs text-gray-500">
+                                                vrea <span className="text-emerald-600 font-semibold">{n.ProdusSolicitat?.denumire_produs}</span>
+                                            </p>
+                                            <p className="text-[10px] text-gray-400 mt-1">Cantitate: {n.nr_bucati} buc.</p>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                            <button 
+                                onClick={() => {
+                                    window.location.href = '/history';
+                                    setIsNotifyOpen(false);
+                                }}
+                                className="w-full p-3 bg-gray-50 text-xs font-bold text-emerald-600 hover:bg-emerald-100 transition-colors"
+                            >
+                                Gestionează din Istoric
+                            </button>
+                        </div>
+                    )}
+                </div>
                      <div className='flex gap-2'>
                      <div className='hidden md:block flex flex-col items-end '>
                         <p className='text-sm font-bold'>{userData.name}</p>
