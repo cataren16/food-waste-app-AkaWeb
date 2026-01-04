@@ -1,4 +1,23 @@
 const { Product } = require('../models');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadPath = 'uploads/';
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath);
+    }
+    cb(null, uploadPath);
+  },
+  filename: function (req, file, cb) {
+    cb(null, 'temp_' + Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
+exports.uploadImage = upload.single('imagine');
 
 exports.getAllProducts = async (req, res) => {
     try {
@@ -13,14 +32,24 @@ exports.addProduct = async (req, res) => {
     try {
         const { id_utilizator, denumire_produs, categorie, cantitate, data_expirare } = req.body;
 
+        if (!denumire_produs) {
+            return res.status(400).json({ message: "Denumirea produsului lipsește!" });
+        }
+
         const newProduct = await Product.create({
             id_utilizator,
             denumire_produs,
             categorie,
-            cantitate,
+            cantitate: parseInt(cantitate),
             data_expirare,
             disponibil: true
         });
+
+        if (req.file) {
+            const oldPath = req.file.path;
+            const newPath = `uploads/produs_${newProduct.id_produs}.jpg`;
+            fs.renameSync(oldPath, newPath);
+        }
 
         res.status(201).json({ message: "Produs adăugat cu succes!", product: newProduct });
     } catch (error) {

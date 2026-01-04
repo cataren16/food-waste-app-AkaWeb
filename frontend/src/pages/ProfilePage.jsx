@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Settings, Plus, Loader, Quote, Trash2, X, Camera } from 'lucide-react';
+import ProductCard from '../components/ProductCard';
 
 const ProfilePage = () => {
   const [user, setUser] = useState(null);
@@ -18,6 +19,7 @@ const ProfilePage = () => {
   const { triggerRefresh } = useOutletContext() || { triggerRefresh: () => {} };
 
   const navigate = useNavigate();
+  const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -78,15 +80,21 @@ const ProfilePage = () => {
         alert("Te rugăm să completezi numele și data expirării!");
         return;
     }
+    const formData = new FormData();
+    formData.append('denumire_produs', newItem.denumire_produs);
+    formData.append('categorie', newItem.categorie);
+    formData.append('cantitate', newItem.cantitate);
+    formData.append('data_expirare', newItem.data_expirare);
+    formData.append('id_utilizator', user.id_utilizator);
+
+    if (selectedFile) {
+        formData.append('imagine', selectedFile);
+    }
 
     try {
         const response = await fetch('http://localhost:3000/api/products/add', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                ...newItem,
-                id_utilizator: user.id_utilizator
-            })
+            body: formData
         });
 
         if (response.ok) {
@@ -96,6 +104,7 @@ const ProfilePage = () => {
             setNewItem({ denumire_produs: '', categorie: 'Altele', cantitate: 1, data_expirare: '' });
             triggerRefresh();
             alert("Produs adăugat cu succes!");
+            setSelectedFile(null);
         } else {
             alert("Eroare la adăugare produs.");
         }
@@ -222,6 +231,36 @@ const ProfilePage = () => {
                           />
                       </div>
 
+                    <div className="space-y-2">
+                        <label className="block text-sm font-bold text-gray-700 ml-1">Poza Produsului</label>
+                        <div 
+                            onClick={() => fileInputRef.current.click()}
+                            className="w-full p-4 border-2 border-dashed border-emerald-100 rounded-xl bg-emerald-50/30 hover:bg-emerald-50 hover:border-emerald-300 transition-all cursor-pointer flex flex-col items-center justify-center gap-2"
+                        >
+                            <input 
+                            type="file" 
+                            ref={fileInputRef} 
+                            className="hidden" 
+                            accept="image/*" 
+                            onChange={(e) => setSelectedFile(e.target.files[0])} 
+                            />
+                            
+                            {selectedFile ? (
+                            <div className="flex items-center gap-2 text-emerald-700">
+                                <div className="bg-emerald-100 p-2 rounded-lg">
+                                <Camera size={18} />
+                                </div>
+                                <span className="text-sm font-medium truncate max-w-[200px]">{selectedFile.name}</span>
+                            </div>
+                            ) : (
+                            <>
+                                <Camera className="text-emerald-400" size={24} />
+                                <p className="text-xs text-emerald-600/70 font-medium">Apasă aici pentru a încărca o imagine</p>
+                            </>
+                            )}
+                        </div>
+                    </div>
+
                       <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-200 transition-transform active:scale-95 mt-4 text-lg">
                           Salvează în Frigider
                       </button>
@@ -304,32 +343,12 @@ const ProfilePage = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pb-8">
             {products.map((produs) => (
-                <div key={produs.id_produs} className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group relative">
-                    
-                    <button 
-                        onClick={() => handleDeleteProduct(produs.id_produs)}
-                        className="absolute top-4 right-4 text-gray-400 hover:text-red-600 transition-all p-2 bg-white rounded-full shadow-sm hover:shadow-md border border-transparent hover:border-red-100 z-10"
-                        title="Șterge produs"
-                    >
-                        <Trash2 size={18} />
-                    </button>
-
-                    <div className="h-28 bg-gray-50 rounded-2xl flex items-center justify-center text-6xl mb-5 group-hover:scale-110 transition-transform duration-300">
-                        🍲
-                    </div>
-                    <h3 className="text-lg font-bold text-gray-800 mb-1 line-clamp-1" title={produs.denumire_produs}>
-                      {produs.denumire_produs || "Produs"}
-                    </h3>
-                    <p className="text-sm text-gray-500 font-medium mb-4 flex items-center gap-1">
-                        ⏳ Exp: <span className={getDaysLeft(produs.data_expirare) === "Expirat" ? "text-red-500 font-bold" : "text-emerald-600"}>{getDaysLeft(produs.data_expirare)}</span>
-                    </p>
-                    <div className="w-full bg-emerald-100/50 rounded-full h-2.5 overflow-hidden">
-                        <div 
-                            className="bg-emerald-500 h-full rounded-full transition-all duration-500 ease-out" 
-                            style={{ width: `${getProgress(produs.data_expirare)}%` }}
-                        ></div>
-                    </div>
-                </div>
+                <ProductCard 
+                    key={produs.id_produs} 
+                    product={produs} 
+                    isProfile={true} 
+                    onDelete={handleDeleteProduct} 
+                />
             ))}
         </div>
       )}
