@@ -4,9 +4,11 @@ import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Sidebar from './components/Sidebar';
 import ProfilePage from './pages/ProfilePage';
-import Navbar from './components/Navbar';
 
-const Feed = () => <div className="text-2xl font-bold p-8">Aici este Feed-ul</div>;
+import Navbar from './components/Navbar';
+import FeedPage from './pages/FeedPage';
+
+// const Feed = () => <div className="text-2xl font-bold p-8">Aici este Feed-ul</div>;
 const Groups = () => <div className="text-2xl font-bold p-8">Aici sunt Grupurile</div>;
 
 const DashboardLayout = () => {
@@ -50,7 +52,7 @@ function App() {
 
       <Route element={<DashboardLayout />}>
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/feed" element={<Feed />} />
+        <Route path="/feed" element={<FeedPage />} />
         <Route path="/groups" element={<Groups />} />
       </Route>
       
