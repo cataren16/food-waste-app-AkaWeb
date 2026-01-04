@@ -17,30 +17,6 @@ const getLinkClasses = ({ isActive }) => {
 const Sidebar = ({ refreshTrigger, onOpenAddModal }) => {
 
     const navigate = useNavigate();
-    const [totalProduse, setTotalProduse] = useState(0);
-
-    useEffect(() => {
-        const fetchProductCount = async () => {
-            const userStr = localStorage.getItem('user');
-            if (!userStr) return;
-
-            try {
-                const user = JSON.parse(userStr);
-                const userId = user.id_utilizator;
-
-                const response = await fetch('http://localhost:3000/api/products');
-                if (response.ok) {
-                    const allProducts = await response.json();
-                    const myProducts = allProducts.filter(p => String(p.id_utilizator) === String(userId));
-                    setTotalProduse(myProducts.length);
-                }
-            } catch (error) {
-                console.error(error);
-            }
-        };
-
-        fetchProductCount();
-    }, [refreshTrigger]);
 
     const handleLogout = () => {
         localStorage.removeItem('user');
