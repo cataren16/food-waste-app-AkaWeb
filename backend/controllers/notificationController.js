@@ -84,3 +84,22 @@ exports.deleteNotification = async(req,res)=>{
         res.status(500).json({message:"Eroare la stergerea notificarii", error})
     }
 }
+
+exports.deleteAllNotifications = async (req, res) => {
+    try {
+        const { userId } = req.params; 
+
+        if (!userId) {
+            return res.status(400).json({ message: "ID utilizator lipsă." });
+        }
+
+        await Notificare.destroy({
+            where: { id_utilizator: userId }
+        });
+
+        res.status(200).json({ message: "Toate notificările au fost șterse cu succes." });
+    } catch (err) {
+        console.error("Eroare la ștergerea tuturor notificărilor:", err);
+        res.status(500).json({ message: "Eroare la server la ștergerea notificărilor." });
+    }
+};
