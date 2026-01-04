@@ -1,14 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { CheckCircle2, XCircle, Clock, History, ArrowUpRight, ArrowDownLeft, Inbox } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, History, ArrowUpRight, ArrowDownLeft, Inbox, User } from 'lucide-react';
 
 const HistoryPage = () => {
-  const [activeTab, setActiveTab] = useState('incoming');
+  const [activeTab, setActiveTab] = useState('incoming'); 
   const [data, setData] = useState({ incoming: [], outgoing: [], history: [] });
   const [loading, setLoading] = useState(true);
-  
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
   const { triggerRefresh } = useOutletContext() || { triggerRefresh: () => {} };
   const user = JSON.parse(localStorage.getItem('user'));
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile && (activeTab === 'incoming' || activeTab === 'outgoing')) {
+        setActiveTab('claims');
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [activeTab]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -62,15 +75,15 @@ const HistoryPage = () => {
   };
 
   const getStatusLabel = (status) => {
-    if (status === 0) return { text: 'Așteptare', style: 'bg-orange-50 text-orange-500 border-orange-100' };
-    if (status === 1) return { text: 'Acceptat', style: 'bg-emerald-50 text-emerald-500 border-emerald-100' };
-    return { text: 'Respins', style: 'bg-red-50 text-red-500 border-red-100' };
+    if (status === 0) return { text: 'AȘTEPTARE', style: 'bg-orange-50 text-orange-500 border-orange-100' };
+    if (status === 1) return { text: 'ACCEPTAT', style: 'bg-emerald-50 text-emerald-500 border-emerald-100' };
+    return { text: 'RESPINS', style: 'bg-red-50 text-red-500 border-red-100' };
   };
 
-  if (loading) return <div className="p-20 text-center text-emerald-600 font-bold animate-pulse text-xl">Se încarcă istoricul...</div>;
+  if (loading) return <div className="p-20 text-center text-emerald-600 font-bold animate-pulse text-xl">Se încarcă...</div>;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="max-w-6xl mx-auto px-4 py-6 space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
           <History className="text-emerald-500" /> Istoric & Cereri
@@ -78,110 +91,94 @@ const HistoryPage = () => {
         <p className="text-gray-500 text-sm">Gestionează rezervările și urmărește activitatea ta.</p>
       </div>
 
-      <div className="flex bg-gray-100 p-1.5 rounded-2xl w-full sm:w-max overflow-x-auto no-scrollbar">
-        {[
-          { id: 'incoming', label: 'Cereri Primite', icon: ArrowDownLeft },
-          { id: 'outgoing', label: 'Cereri Trimise', icon: ArrowUpRight },
-          { id: 'history', label: 'Arhivă Tranzacții', icon: Clock },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
-              activeTab === tab.id ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <tab.icon size={18} /> {tab.label}
-          </button>
-        ))}
+      <div className="flex bg-gray-100 p-1.5 rounded-2xl w-full md:w-max">
+        {!isMobile ? (
+          <>
+            {[
+              { id: 'incoming', label: 'Cereri Primite', icon: ArrowDownLeft },
+              { id: 'outgoing', label: 'Cereri Trimise', icon: ArrowUpRight },
+              { id: 'history', label: 'Arhivă Tranzacții', icon: Clock },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  activeTab === tab.id ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <tab.icon size={18} /> {tab.label}
+              </button>
+            ))}
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => setActiveTab('claims')}
+              className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${
+                activeTab === 'claims' || activeTab === 'incoming' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500'
+              }`}
+            >
+              Cereri Produse
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${
+                activeTab === 'history' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500'
+              }`}
+            >
+              Istoric
+            </button>
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-6">
         
-        {activeTab === 'incoming' && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-bold text-gray-700 flex items-center gap-2">
-              <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></span>
-              Solicitări pentru produsele tale
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {data.incoming.length > 0 ? data.incoming.map((claim) => (
-                <div key={claim.id_solicitare} className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="font-bold text-gray-800 text-lg">{claim.ProdusSolicitat?.denumire_produs}</h3>
-                      <p className="text-gray-500 text-sm">
-                        De la: <span className="text-emerald-600 font-semibold">{claim.Solicitant?.prenume} {claim.Solicitant?.nume}</span>
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">Cantitate: {claim.nr_bucati} buc.</p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${getStatusLabel(claim.status_solicitare).style}`}>
-                      {getStatusLabel(claim.status_solicitare).text}
-                    </span>
-                  </div>
-                  
-                  {claim.status_solicitare === 0 && (
-                    <div className="flex gap-3 mt-6">
-                      <button 
-                        onClick={() => handleAction(claim.id_solicitare, 'Approve')}
-                        className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95"
-                      >
-                        <CheckCircle2 size={18} /> Acceptă
-                      </button>
-                      <button 
-                        onClick={() => handleAction(claim.id_solicitare, 'Reject')}
-                        className="flex-1 bg-gray-50 hover:bg-red-50 text-gray-500 hover:text-red-500 py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 border border-gray-100"
-                      >
-                        <XCircle size={18} /> Refuză
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )) : <EmptyState message="Nu ai nicio solicitare primită momentan." />}
-            </div>
-          </div>
+        {!isMobile && (
+          <>
+            {activeTab === 'incoming' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {data.incoming.length > 0 ? data.incoming.map(claim => <ClaimCard key={claim.id_solicitare} claim={claim} onAction={handleAction} getStatus={getStatusLabel} type="incoming" />) : <EmptyState message="Fără cereri primite." />}
+              </div>
+            )}
+            {activeTab === 'outgoing' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {data.outgoing.length > 0 ? data.outgoing.map(claim => <ClaimCard key={claim.id_solicitare} claim={claim} getStatus={getStatusLabel} type="outgoing" />) : <EmptyState message="Fără cereri trimise." />}
+              </div>
+            )}
+          </>
         )}
 
-        {activeTab === 'outgoing' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {data.outgoing.length > 0 ? data.outgoing.map((claim) => (
-              <div key={claim.id_solicitare} className="bg-white p-5 rounded-[2rem] border border-gray-100 shadow-sm">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-bold text-gray-800">{claim.ProdusSolicitat?.denumire_produs}</h3>
-                    <p className="text-xs text-gray-500">Proprietar: {claim.ProdusSolicitat?.owner?.prenume}</p>
-                  </div>
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${getStatusLabel(claim.status_solicitare).style}`}>
-                    {getStatusLabel(claim.status_solicitare).text}
-                  </span>
-                </div>
-              </div>
-            )) : <EmptyState message="Nu ai trimis nicio solicitare încă." />}
+        {isMobile && activeTab !== 'history' && (
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Cereri Primite</h2>
+              {data.incoming.length > 0 ? data.incoming.map(claim => <ClaimCard key={claim.id_solicitare} claim={claim} onAction={handleAction} getStatus={getStatusLabel} type="incoming" isMobile />) : <p className="text-gray-400 text-sm ml-1">Nicio cerere primită.</p>}
+            </div>
+            <div className="space-y-3">
+              <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Cereri Trimise de tine</h2>
+              {data.outgoing.length > 0 ? data.outgoing.map(claim => <ClaimCard key={claim.id_solicitare} claim={claim} getStatus={getStatusLabel} type="outgoing" isMobile />) : <p className="text-gray-400 text-sm ml-1">Nicio cerere trimisă.</p>}
+            </div>
           </div>
         )}
 
         {activeTab === 'history' && (
-          <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
-            <div className="divide-y divide-gray-50">
-              {data.history.length > 0 ? data.history.map((t) => (
-                <div key={t.id_tranzactie} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${t.id_proprietar === user.id_utilizator ? 'bg-orange-50 text-orange-500' : 'bg-emerald-50 text-emerald-500'}`}>
-                      {t.id_proprietar === user.id_utilizator ? <ArrowUpRight size={20} /> : <ArrowDownLeft size={20} />}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-400">{new Date(t.data_finalizare).toLocaleDateString('ro-RO')}</p>
-                      <p className="text-gray-800 font-semibold">
-                        {t.id_proprietar === user.id_utilizator ? 
-                          `Ai oferit ${t.nr_bucati} buc. de ${t.product?.denumire_produs} către ${t.beneficiary?.prenume}` : 
-                          `Ai primit ${t.nr_bucati} buc. de ${t.product?.denumire_produs} de la ${t.owner?.prenume}`}
-                      </p>
-                    </div>
-                  </div>
-                  <span className="px-4 py-1.5 rounded-xl bg-gray-50 text-gray-500 text-xs font-bold border border-gray-100">Finalizat</span>
+          <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
+            {data.history.length > 0 ? data.history.map((t) => (
+              <div key={t.id_tranzactie} className="p-5 flex items-center gap-4 hover:bg-gray-50 transition-colors">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${t.id_proprietar === user.id_utilizator ? 'bg-orange-50 text-orange-500' : 'bg-emerald-50 text-emerald-500'}`}>
+                  {t.id_proprietar === user.id_utilizator ? <ArrowUpRight size={20} /> : <ArrowDownLeft size={20} />}
                 </div>
-              )) : <EmptyState message="Nu există tranzacții finalizate." />}
-            </div>
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">{new Date(t.data_finalizare).toLocaleDateString('ro-RO')}</p>
+                  <p className="text-gray-800 font-semibold text-sm">
+                    {t.id_proprietar === user.id_utilizator ? 
+                      `Ai oferit ${t.nr_bucati} buc. de ${t.product?.denumire_produs} către ${t.beneficiary?.prenume}` : 
+                      `Ai primit ${t.nr_bucati} buc. de ${t.product?.denumire_produs} de la ${t.owner?.prenume}`}
+                  </p>
+                </div>
+              </div>
+            )) : <EmptyState message="Nu există tranzacții finalizate." />}
           </div>
         )}
       </div>
@@ -189,10 +186,61 @@ const HistoryPage = () => {
   );
 };
 
+const ClaimCard = ({ claim, onAction, getStatus, type, isMobile }) => {
+  const status = getStatus(claim.status_solicitare);
+  
+  return (
+    <div className={`bg-white border border-gray-100 shadow-sm transition-all ${isMobile ? 'p-4 rounded-3xl' : 'p-5 rounded-[2rem] hover:shadow-md'}`}>
+      <div className="flex justify-between items-start mb-3 gap-2">
+        <div className="flex gap-3 min-w-0">
+          {type === 'incoming' && (
+            <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
+              <User size={18} className="text-emerald-500" />
+            </div>
+          )}
+          <div className="min-w-0">
+            <h3 className={`font-bold text-gray-800 truncate ${isMobile ? 'text-sm' : 'text-lg'}`}>
+              {claim.ProdusSolicitat?.denumire_produs}
+            </h3>
+            <div className="flex flex-col gap-0.5">
+              <p className="text-gray-500 text-xs">
+                {type === 'incoming' ? `De la: ${claim.Solicitant?.prenume}` : `Proprietar: ${claim.ProdusSolicitat?.owner?.prenume}`}
+              </p>
+              <p className="text-[11px] text-emerald-600 font-bold uppercase tracking-tight">
+                Cantitate: {claim.nr_bucati} buc.
+              </p>
+            </div>
+          </div>
+        </div>
+        <span className={`shrink-0 px-2 py-1 rounded-lg text-[9px] font-black border ${status.style}`}>
+          {status.text}
+        </span>
+      </div>
+
+      {type === 'incoming' && claim.status_solicitare === 0 && (
+        <div className={`flex gap-2 ${isMobile ? 'mt-3' : 'mt-5'}`}>
+          <button 
+            onClick={() => onAction(claim.id_solicitare, 'Approve')}
+            className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95"
+          >
+            <CheckCircle2 size={16} /> Acceptă
+          </button>
+          <button 
+            onClick={() => onAction(claim.id_solicitare, 'Reject')}
+            className="flex-1 bg-gray-50 hover:bg-red-50 text-gray-500 hover:text-red-500 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all border border-gray-100 active:scale-95"
+          >
+            <XCircle size={16} /> Refuză
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const EmptyState = ({ message }) => (
   <div className="col-span-full py-10 text-center bg-gray-50 rounded-[2rem] border-2 border-dashed border-gray-200">
     <Inbox className="mx-auto text-gray-300 mb-2" size={40} />
-    <p className="text-gray-400 font-medium">{message}</p>
+    <p className="text-gray-400 font-medium text-sm">{message}</p>
   </div>
 );
 
