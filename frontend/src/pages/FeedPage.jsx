@@ -2,10 +2,25 @@ import { useState, useEffect } from "react";
 import { data } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 
+const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); 
+    const year = date.getFullYear();
+    
+    return `${day}/${month}/${year}`;
+};
+
 const FeedPage = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading]=useState(true);
     const [error, setError]=useState(null);
+
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const [claimQuantity, setClaimQuantity] = useState(1);
 
     const user = JSON.parse(localStorage.getItem("user")) || {};
 
@@ -38,10 +53,14 @@ const FeedPage = () => {
         fetchFeedProducts();
     }, []);
 
-    const handleClaim = async (productId) => {
-        const storedUser = JSON.parse(localStorage.getItem("user"));
-        if(!confirm("Ești sigur că vrei să claim acest produs?")) return;
+      const handleOpenClaimModal = (product)=>{
+        setSelectedProduct(product);
+        setClaimQuantity(1);
+        setShowModal(true);
+    }
 
+    const handleConfirmClaim = async () => {
+        const storedUser = JSON.parse(localStorage.getItem("user"));
         try{
             const response = await fetch(`http://localhost:3000/api/marketplace/claim`, {
                 method: "POST",
@@ -49,15 +68,17 @@ const FeedPage = () => {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    id_produs: productId,
-                    id_solicitant: storedUser.id_utilizator
+                    id_produs: selectedProduct.id_produs,
+                    id_solicitant: storedUser.id_utilizator,
+                    nr_bucati: claimQuantity
                 })
             });
 
             const result = await response.json();
             if(response.ok){
                 alert("Solicitare trimisa cu succes!Proprietarul va fi notificat.");
-                setProducts(prev=>prev.filter(p=>p.id_produs!==productId));
+                setProducts(prev=>prev.filter(p=>p.id_produs!==selectedProduct.id_produs));
+                setShowModal(false);
             }else{
                 alert(result.message || "Eroare la claim produs.");
             }
@@ -100,20 +121,85 @@ const FeedPage = () => {
                         <p className="text-gray-400">Prietenii tăi nu au postat nimic momentan. Revino mai târziu!</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
-                        {products.map((p) => (
-                            <ProductCard 
-                                key={p.id_produs} 
-                                product={p} 
-                                onClaim={handleClaim} 
-                            />
-                        ))}
-                    </div>
-                )}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
+                {products.map((p) => (
+                    <ProductCard 
+                        key={p.id_produs} 
+                        product={p} 
+                        onClaim={handleOpenClaimModal} 
+                    />
+                ))}
             </div>
+        )}
+    </div>
+
+    {showModal && selectedProduct && (
+        
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div 
+                        className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" 
+                        onClick={() => setShowModal(false)}
+                    ></div>
+
+                    <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl relative animate-in fade-in zoom-in duration-200">
+                        <div className="flex justify-between items-start mb-6">
+                            <div>
+                                <h2 className="text-2xl font-black text-gray-800">{selectedProduct.denumire_produs}</h2>
+                                <span className="text-xs font-bold uppercase tracking-widest text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md">
+                                    {selectedProduct.categorie}
+                                </span>
+                            </div>
+                            <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+                        </div>
+
+                        <div className="space-y-4 mb-8">
+                            <div className="flex justify-between items-center bg-orange-50 p-3 rounded-2xl">
+                                <span className="text-sm font-bold text-orange-700">Expira la:</span>
+                                <span className="text-sm font-black text-orange-700">{formatDate(selectedProduct.data_expirare)}</span>
+                            </div>
+
+                            <div className="p-4 bg-gray-50 rounded-2xl">
+                                <label className="block text-xs font-black text-gray-400 uppercase mb-2">
+                                    Câte bucăți dorești?
+                                </label>
+                                <select 
+                                    className="w-full bg-white border-2 border-gray-100 rounded-xl p-3 font-bold text-gray-700 outline-none focus:border-emerald-500 transition-all"
+                                    value={claimQuantity}
+                                    onChange={(e) => setClaimQuantity(parseInt(e.target.value))}
+                                >
+                                    {[...Array(selectedProduct.cantitate)].map((_, i) => (
+                                        <option key={i + 1} value={i + 1}>
+                                            {i + 1} {i + 1 === 1 ? 'bucată' : 'bucăți'}
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className="mt-2 text-[10px] text-gray-400 font-medium italic">
+                                    Stoc disponibil: {selectedProduct.cantitate} bucăți
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <button 
+                                onClick={handleConfirmClaim}
+                                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-emerald-100 transition-all active:scale-95"
+                            >
+                                Trimitere Solicitare
+                            </button>
+                            <button 
+                                onClick={() => setShowModal(false)}
+                                className="w-full py-3 text-gray-400 font-bold text-sm hover:text-gray-600 transition-colors"
+                            >
+                                Mai târziu
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
+
 
 export default FeedPage;
 

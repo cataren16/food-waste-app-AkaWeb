@@ -70,75 +70,77 @@ const STATUS = {
     REJECTED: 2
 }
 
-exports.claimProduct = async(req,res)=>{
-    const {id_produs, id_solicitant} = req.body;
+exports.claimProduct = async (req, res) => {
+    const { id_produs, id_solicitant, nr_bucati } = req.body;
 
-    if(!id_produs || !id_solicitant){
-        return res.status(400).json({message: "Lipsesc datele necesare."});
-    }
-
-    try{
+    try {
         const produs = await Product.findByPk(id_produs);
-        if(!produs || !produs.disponibil){
-            return res.status(404).json({message: "Produsul nu este disponibil."});
-        }
-        if(produs.id_utilizator === id_solicitant){
-            return res.status(400).json({message: "Nu poti revendica propriul produs."});
+        
+        if (!produs || !produs.disponibil || produs.cantitate <= 0) {
+            return res.status(404).json({ message: "Ne pare rău, produsul tocmai s-a epuizat!" });
         }
 
-        const solicitareExistenta = await Solicitare.findOne({
-            where:{
-                id_produs: id_produs,
-                id_solicitant: id_solicitant,
-                status_solicitare: STATUS.PENDING
+        if (nr_bucati > produs.cantitate) {
+            return res.status(400).json({ 
+                message: `Stoc insuficient. Mai sunt disponibile doar ${produs.cantitate} bucăți.` 
+            });
+        }
+
+        const cerereIdentica = await Solicitare.findOne({
+            where: {
+                id_produs,
+                id_solicitant,
+                status_solicitare: STATUS.PENDING,
+                nr_bucati 
             }
         });
 
-        if(solicitareExistenta){
-            return res.status(400).json({message: "Ai deja o solicitare in asteptare pentru acest produs."});
+        if (cerereIdentica) {
+            return res.status(400).json({ message: "Ai trimis deja o solicitare identică. Așteaptă răspunsul proprietarului." });
         }
 
         const newSolicitare = await Solicitare.create({
-            id_produs: id_produs,
-            id_solicitant: id_solicitant,
+            id_produs,
+            id_solicitant,
             status_solicitare: STATUS.PENDING,
-            nr_bucati: 1
+            nr_bucati
         });
 
         await Notificare.create({
             id_utilizator: produs.id_utilizator,
-            mesaj: `Utilizatorul cu ID ${id_solicitant} a solicitat produsul tau cu ID ${id_produs}.`,
-            citit: false
+            mesaj: `O nouă solicitare: ${nr_bucati} buc. de ${produs.denumire_produs}.`,
+            citita: false
         });
 
-        res.status(201).json({message: "Solicitare creata cu succes.", solicitare: newSolicitare});
+        res.status(201).json({ 
+            message: "Solicitare trimisă! Așteaptă aprobarea proprietarului.",
+            solicitare: newSolicitare
+         });
 
+    } catch (error) {
+        res.status(500).json({ message: "Eroare server.", error: error.message });
     }
-    catch(error){
-        console.error("Eroare la revendicarea produsului:", error);
-        res.status(500).json({message: "Eroare la operatia de solicitare.", error: error.message});
-    }
-}
+};
 
 exports.getIncomingClaims = async(req,res)=>{
     const userCurent = req.query.userId;
 
     try{
         const claims = await Solicitare.findAll({
-            where:{status_solicitare: STATUS.PENDING},
             include:[
                 {
                     model:Product,
                     as: 'ProdusSolicitat',
                     where: {id_utilizator: userCurent},
-                    attributes:['id_produs','denumire_produs']
+                    attributes:['id_produs','denumire_produs', 'cantitate' ]
                 },
                 {
                     model:User,
                     as: 'Solicitant',
-                    attributes:['id_utilizator','nume','email']
+                    attributes:['id_utilizator','nume','prenume','email']
                 }
-            ]
+            ],
+            order:[['created_at','DESC']]
         });
         res.status(200).json(claims);
     }catch(error){
@@ -156,12 +158,14 @@ exports.getIncomingClaims = async(req,res)=>{
                 {
                     model:Product,
                     as: 'ProdusSolicitat',
+                    attributes:['id_produs','denumire_produs'],
                     include:[
                     {   model:User,
                         as:'owner',
-                        attributes:['id_utilizator','nume','email']
+                        attributes:['id_utilizator','nume','prenume','email']
                         }
-                    ]
+                    ],
+                    order:['created_at','DESC']
                 }
             ]
             });
@@ -173,85 +177,84 @@ exports.getIncomingClaims = async(req,res)=>{
         }
     };
 
-    exports.handleClaim = async(req,res)=>{
-        const {Tranzactie} = require("../models")
-        const {id_solicitare, action, userId} = req.body;
-        
-        try{
-            const solicitare = await Solicitare.findByPk(id_solicitare,
-                {include:[{model:Product, as:'ProdusSolicitat'}]}
-            );
+    exports.handleClaim = async (req, res) => {
+    const { Tranzactie, Product, Solicitare, Notificare } = require("../models");
+    const { id_solicitare, action, userId } = req.body;
 
-            if(!solicitare)
-                return res.status(404).json({message:"Cerere inexistenta!"});
+    try {
+        const solicitare = await Solicitare.findByPk(id_solicitare, {
+            include: [{ model: Product, as: 'ProdusSolicitat' }]
+        });
 
-            if(solicitare.ProdusSolicitat.id_utilizator!=userId)
-                return res.status(403).json({message:"Nu ai dreptul sa gestionezi aceste date!"})
+        if (!solicitare) {
+            return res.status(404).json({ message: "Cerere inexistenta!" });
+        }
 
+        const produs = solicitare.ProdusSolicitat;
 
-            const product = solicitare.ProdusSolicitat
+        if (produs.id_utilizator != userId) {
+            return res.status(403).json({ message: "Nu ai dreptul să gestionezi această solicitare!" });
+        }
 
-            if (action === "Approve") {
+        if (solicitare.status_solicitare !== STATUS.PENDING) {
+            return res.status(400).json({ message: "Această solicitare a fost deja procesată." });
+        }
 
-                const cantitateAprobata = await Solicitare.sum("nr_bucati", {
-                    where: {
-                        id_produs: product.id_produs,
-                        status_solicitare: STATUS.APPROVED
-                    }
+        if (action === "Approve") {
+            if (produs.cantitate < solicitare.nr_bucati) {
+                return res.status(400).json({
+                    message: `Stoc insuficient! Mai sunt doar ${produs.cantitate} bucăți disponibile.`
                 });
-
-                const cantitateDisponibila = product.cantitate - (cantitateAprobata || 0);
-
-                if (cantitateDisponibila < solicitare.nr_bucati) {
-                    return res.status(400).json({
-                        message: "Cantitate insuficienta in stoc pentru aprobarea cererii"
-                    });
-                }
-
-                await solicitare.update({ status_solicitare: STATUS.APPROVED });
-
-                const cantitateRamasa = cantitateDisponibila - solicitare.nr_bucati;
-
-                await product.update({
-                    disponibil: cantitateRamasa > 0
-                });
-
-                await Tranzactie.create({
-                    id_produs:product.id_produs,
-                    id_proprietar:product.id_utilizator,
-                    id_beneficiar:solicitare.id_solicitant,
-                    nr_bucati:solicitare.nr_bucati,
-                    data_finalizare: new Date()
-                })
-
-                await Notificare.create({
-                    id_utilizator: solicitare.id_solicitant,
-                    mesaj: `Cererea ta pentru ${product.denumire_produs} a fost aprobata!`,
-                    citita: false
-                });
-
-                return res.json({ message: "Cerere aprobata si tranzactie finalizata!" });
             }
 
+            const nouaCantitate = produs.cantitate - solicitare.nr_bucati;
 
-            if (action === 'Reject') {
+            await produs.update({
+                cantitate: nouaCantitate,
+                disponibil: nouaCantitate > 0
+            });
 
-            await solicitare.update({ status_solicitare: STATUS.REJECTED });
+            await solicitare.update({ status_solicitare: STATUS.APPROVED });
+
+            await Tranzactie.create({
+                id_produs: produs.id_produs,
+                id_proprietar: produs.id_utilizator,
+                id_beneficiar: solicitare.id_solicitant,
+                nr_bucati: solicitare.nr_bucati,
+                data_finalizare: new Date()
+            });
 
             await Notificare.create({
                 id_utilizator: solicitare.id_solicitant,
-                mesaj: `Cererea ta pentru ${product.denumire_produs} a fost respinsa.`,
+                mesaj: `Cererea ta pentru ${solicitare.nr_bucati} buc. de ${produs.denumire_produs} a fost aprobată!`,
                 citita: false
             });
 
-            return res.json({ message: "Cerere respinsa." });
+            return res.json({ 
+                message: "Solicitare aprobată cu succes!", 
+                cantitateRamasa: nouaCantitate 
+            });
         }
 
-        return res.status(400).json({ message: "Actiune necunoscuta" });
+        if (action === "Reject") {
+            await solicitare.update({ status_solicitare: STATUS.REJECTED });
+            await Notificare.create({
+                id_utilizator: solicitare.id_solicitant,
+                mesaj: `Ne pare rău, solicitarea ta pentru ${produs.denumire_produs} a fost respinsă.`,
+                citita: false
+            });
+
+            return res.json({ message: "Solicitare respinsă." });
+        }
+
+        return res.status(400).json({ message: "Acțiune necunoscută!" });
 
     } catch (error) {
-        console.error("Eroare la gestionarea solicitarii:", error);
-        res.status(500).json({ message: "Eroare la gestionarea solicitarii.", eroare: error.message });
+        console.error("Eroare la gestionarea solicitării:", error);
+        res.status(500).json({ 
+            message: "Eroare la gestionarea solicitării.", 
+            eroare: error.message 
+        });
     }
 };
 

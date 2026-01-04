@@ -25,7 +25,7 @@ const ProductCard = ({product, onClaim})=>{
                     <span>Exp: {getDaysLeft(product.data_expirare)}</span>
                 </div>
                 <button className="w-full mt-5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-md shadow-emerald-100" 
-                    onClick={()=>onClaim(product.id_produs)}>
+                    onClick={()=>onClaim(product)}>
                     <span>Claim</span>
                 </button>
             </div>
