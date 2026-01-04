@@ -6,7 +6,8 @@ import Sidebar from './components/Sidebar';
 import ProfilePage from './pages/ProfilePage';
 
 import Navbar from './components/Navbar';
-import FeedPage from './pages/FeedPage';
+import HistoryPage from './pages/HistoryPage';
+import FeedPage from  './pages/FeedPage';
 
 // const Feed = () => <div className="text-2xl font-bold p-8">Aici este Feed-ul</div>;
 const Groups = () => <div className="text-2xl font-bold p-8">Aici sunt Grupurile</div>;
@@ -54,9 +55,10 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/feed" element={<FeedPage />} />
         <Route path="/groups" element={<Groups />} />
+        <Route path="/history" element={<HistoryPage />} />
       </Route>
-      
-      <Route path="*" element={<Navigate to="/login" replace />} />
+
+      <Route path="/<>" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }
