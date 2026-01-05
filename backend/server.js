@@ -22,7 +22,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/marketplace', marketplaceRoutes);
 app.use('/api/notifications', notificationRoutes);
-
+app.use('/uploads', express.static('uploads'));
 
 app.get('/', (req, res) => {
   res.send('Serverul food-waste-app-akaweb ruleaza cu succes!!!');
