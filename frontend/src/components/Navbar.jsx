@@ -4,6 +4,7 @@ import Searchbar from './Searchbar';
 import MobileSearchOverlay from './MobileSearchOverlay';
 import ResultList from './ResultsList';
 
+
 const Navbar = ()=>{
 
     const [isMobileOverlayOpen, setisMobileOverlayOpen] = useState(false);

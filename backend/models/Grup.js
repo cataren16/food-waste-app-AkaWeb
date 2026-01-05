@@ -51,6 +51,11 @@ module.exports = (sequelize) => {
             otherKey: 'id_utilizator',  
             as: 'Membri'               
         });
+        Grup.hasMany(models.Product, {
+       foreignKey: 'id_grup',
+       as: 'produse'
+       });
+
         
     };
 
