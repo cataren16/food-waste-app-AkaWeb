@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar';
 import ProfilePage from './pages/ProfilePage';
 
 import Navbar from './components/Navbar';
+import GroupsPage from "./components/groups/GroupsPage";
 import HistoryPage from './pages/HistoryPage';
 import FeedPage from  './pages/FeedPage';
 
@@ -42,9 +43,11 @@ function App() {
 
       <Route element={<DashboardLayout />}>
         <Route path="/profile" element={<ProfilePage />} />
+
         <Route path="/feed" element={<FeedPage />} />
-        <Route path="/groups" element={<Groups />} />
+        <Route path="/groups" element={<GroupsPage />} />
         <Route path="/history" element={<HistoryPage />} />
+
       </Route>
 
       <Route path="/<>" element={<Navigate to="/login" replace />} />

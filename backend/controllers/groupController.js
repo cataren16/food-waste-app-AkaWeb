@@ -1,4 +1,5 @@
-const {Grup, MembriGrup,User}=require('../models');
+const {Grup, MembriGrup,User,Product}=require('../models');
+
 
 exports.creeazaGrup= async(req,res)=>{
     try{
@@ -181,3 +182,105 @@ exports.adaugaMembru= async (req,res)=>{
             res.status(500).json({ message: "Eroare la ștergerea grupului", error: error.message });
         }
     }
+
+    
+
+exports.listaProduseGrup = async (req, res) => {
+  try {
+    const id_grup = req.params.id;
+
+    if (!id_grup) {
+      return res.status(400).json({ message: "Lipseste ID-ul grupului!" });
+    }
+
+    const produse = await Product.findAll({
+      where: { id_grup: id_grup },
+      include: [
+        {
+          model: User,
+          as: "owner",
+          attributes: ["id_utilizator", "nume", "prenume", "email"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    return res.status(200).json({ produse });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Eroare la preluarea produselor grupului", error: error.message });
+  }
+};
+
+exports.adaugaProdusDinFrigider = async (req, res) => {
+  try {
+    const id_grup = req.params.id;
+    const { id_produs, id_utilizator } = req.body;
+
+    if (!id_grup || !id_produs || !id_utilizator) {
+      return res.status(400).json({ message: "Lipsesc datele necesare!" });
+    }
+
+    const esteMembru = await MembriGrup.findOne({
+      where: { id_grup: id_grup, id_utilizator: id_utilizator },
+    });
+
+    if (!esteMembru) {
+      return res.status(403).json({ message: "Nu esti membru in acest grup!" });
+    }
+
+    const produs = await Product.findByPk(id_produs);
+
+    if (!produs) {
+      return res.status(404).json({ message: "Produsul nu exista!" });
+    }
+
+    if (String(produs.id_utilizator) !== String(id_utilizator)) {
+      return res.status(403).json({ message: "Nu poti adauga un produs care nu este al tau!" });
+    }
+
+    if (produs.id_grup !== null && typeof produs.id_grup !== "undefined") {
+      return res.status(409).json({ message: "Produsul este deja intr-un grup!" });
+    }
+
+    await produs.update({ id_grup: id_grup });
+
+    return res.status(200).json({ message: "Produs adaugat in grup cu succes!", produs });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Eroare la adaugarea produsului in grup", error: error.message });
+  }
+};
+
+exports.iesiDinGrup = async (req, res) => {
+  try {
+    const id_grup = req.params.id;
+    const { id_utilizator } = req.body;
+
+    if (!id_grup || !id_utilizator) {
+      return res.status(400).json({ message: "Lipsesc datele necesare!" });
+    }
+
+    const grup = await Grup.findByPk(id_grup);
+    if (!grup) {
+      return res.status(404).json({ message: "Grupul nu exista!" });
+    }
+
+    if (String(grup.id_admin) === String(id_utilizator)) {
+      return res.status(400).json({ message: "Adminul nu poate parasi grupul. Sterge grupul sau transfera admin (viitor)." });
+    }
+
+    const rezultat = await MembriGrup.destroy({
+      where: { id_grup: id_grup, id_utilizator: id_utilizator },
+    });
+
+    if (rezultat === 0) {
+      return res.status(404).json({ message: "Nu esti membru in acest grup!" });
+    }
+
+    return res.status(200).json({ message: "Ai parasit grupul cu succes!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Eroare la iesirea din grup", error: error.message });
+  }
+};

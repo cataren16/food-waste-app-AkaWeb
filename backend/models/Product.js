@@ -40,7 +40,13 @@ module.exports = (sequelize) => {
             defaultValue: true,
             allowNull: false,
             field: 'disponibil'
+        },
+        id_grup: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        field: 'id_grup'
         }
+
     }, {
         tableName: 'Produse', 
         timestamps: true, 
@@ -69,6 +75,12 @@ module.exports = (sequelize) => {
             as: 'transactions',
             onDelete: 'SET NULL' 
         });
+        Product.belongsTo(models.Grup, {
+        foreignKey: 'id_grup',
+         as: 'grup',
+        onDelete: 'SET NULL'
+        });
+
     };
 
 
