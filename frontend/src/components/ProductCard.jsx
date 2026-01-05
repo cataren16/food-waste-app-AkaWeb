@@ -3,7 +3,9 @@ import { Trash2 } from "lucide-react";
 
 const ProductCard = ({ product, onClaim, onDelete, isProfile = false }) => {
     
-    const imageUrl = `http://localhost:3000/uploads/produs_${product.id_produs}.jpg`;
+    const imageUrl = product.imagine 
+        ? `http://localhost:3000/${product.imagine}` 
+        : "https://placehold.co/400x300?text=Fara+Imagine";
 
     const getDaysLeft = (dateString) => {
         if (!dateString) return "N/A";

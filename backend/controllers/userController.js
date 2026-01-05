@@ -40,3 +40,24 @@ exports.getProfile = async (req, res) => {
         res.status(500).json({ message: "Eroare server", error: error.message });
     }
 };
+
+exports.updateUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { descriere } = req.body; 
+
+        const user = await User.findByPk(id);
+
+        if (!user) {
+            return res.status(404).json({ message: "Utilizatorul nu a fost găsit" });
+        }
+
+        user.descriere = descriere;
+        await user.save(); 
+
+        res.status(200).json({ message: "Profil actualizat!", user });
+    } catch (error) {
+        console.error("Eroare update:", error);
+        res.status(500).json({ message: "Eroare server", error: error.message });
+    }
+};

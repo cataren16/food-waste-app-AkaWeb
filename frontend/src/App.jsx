@@ -15,6 +15,7 @@ const Groups = () => <div className="text-2xl font-bold p-8">Aici sunt Grupurile
 
 const DashboardLayout = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const triggerRefresh = () => {
     setRefreshTrigger(prev => prev + 1);
@@ -22,11 +23,14 @@ const DashboardLayout = () => {
 
  return (
     <div className="min-h-screen bg-gray-50 flex"> 
-      <Sidebar refreshTrigger={refreshTrigger} />
+      <Sidebar 
+      refreshTrigger={refreshTrigger} 
+      onOpenAddModal={() => setIsAddModalOpen(true)} />
+
       <div className="flex-1 flex flex-col md:ml-64 transition-all duration-300">
         <Navbar />
         <main className="flex-1 p-4 md:p-8 bg-gray-50">
-          <Outlet context={{ triggerRefresh }} />
+          <Outlet context={{ triggerRefresh , isAddModalOpen, setIsAddModalOpen }} />
         </main>
       </div>
 

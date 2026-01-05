@@ -43,17 +43,27 @@ exports.addProduct = async (req, res) => {
             categorie,
             cantitate: parseInt(cantitate),
             data_expirare,
-            disponibil: true
+            disponibil: true,
+            imagine: null 
         });
 
         if (req.file) {
             const oldPath = req.file.path;
-            const newPath = `uploads/produs_${newProduct.id_produs}.jpg`;
-            fs.renameSync(oldPath, newPath);
+            const extension = path.extname(req.file.originalname); 
+            const newFilename = `produs_${newProduct.id_produs}${extension}`;
+            const newPath = path.join('uploads', newFilename); 
+            
+            if (fs.existsSync(oldPath)) {
+                 fs.renameSync(oldPath, newPath);
+                 
+                 const dbPath = `uploads/${newFilename}`; 
+                 await newProduct.update({ imagine: dbPath });
+            }
         }
 
         res.status(201).json({ message: "Produs adăugat cu succes!", product: newProduct });
     } catch (error) {
+        console.error("Eroare Add Product:", error);
         res.status(500).json({ message: "Eroare la adăugare", error: error.message });
     }
 };

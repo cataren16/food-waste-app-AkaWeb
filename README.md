@@ -12,15 +12,12 @@ Interactive and community-based food waste app group project developed using Rea
 # Structură & funcționalități aplicație 
 
 Pagina de register
-- formular cu câmpuri pentru înregistrarea unui nou user (ex. Nume, email, parolă)
+- formular cu câmpuri pentru înregistrarea unui nou user (email, parolă)
 - utilizarea validărilor și a popup-urilor de eroare la introducerea unor date incorecte
 
 Pagina de login
 - formular cu email și parolă pentru autentificarea unui user deja existent
 - redirecționarea user-ului către Homepage 
-
-Pagina de resetare parolă
-- formular cu introducere de email în baza căruia user-ul primește mail de resetare a parolei
 
 Homepage 
 - feed principal cu produsele listate de către userii din lista de prieteni sau de către useri din grupuri comune
@@ -32,10 +29,10 @@ Homepage
 - opțiune de creare a unui grup nou
 
 Pagina de profil
-- descriere profil + setare status (vegetarian, carnivor, etc)
+- descriere profil
 - lista produselor adăugate de utilizator din frigiderul propriu, pe categorii
 - buton de adaugare a unui produs nou (redirecționare către un formular)
-- fiecare produs are o descriere, opțiuni de ștergere/editare, opțiune de setare a disponibilității
+- fiecare produs are opțiune de ștergere, opțiune de setare a disponibilității
 - secțiune de notificări, alerte (cereri de produse aprobate, solicitări de produse, expirare de produse)
 
 Pagina de grup
