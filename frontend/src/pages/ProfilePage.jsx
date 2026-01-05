@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { Settings, Plus, Loader, Quote, Trash2, X, Camera } from 'lucide-react';
+import { Plus, Loader, Quote, X, Camera, Pencil, Check } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 
 const ProfilePage = () => {
@@ -8,7 +8,9 @@ const ProfilePage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  const [showModal, setShowModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editDesc, setEditDesc] = useState('');
+
   const [newItem, setNewItem] = useState({
     denumire_produs: '',
     categorie: 'Altele',
@@ -16,7 +18,11 @@ const ProfilePage = () => {
     data_expirare: ''
   });
 
-  const { triggerRefresh } = useOutletContext() || { triggerRefresh: () => {} };
+  const { triggerRefresh, isAddModalOpen, setIsAddModalOpen } = useOutletContext() || { 
+    triggerRefresh: () => {},
+    isAddModalOpen: false,
+    setIsAddModalOpen: () => {}
+  };
 
   const navigate = useNavigate();
   const [selectedFile, setSelectedFile] = useState(null);
@@ -51,9 +57,11 @@ const ProfilePage = () => {
         if (userRes.ok) {
             const freshUserData = await userRes.json();
             setUser(freshUserData); 
+            setEditDesc(freshUserData.descriere || ""); 
             localStorage.setItem('user', JSON.stringify(freshUserData)); 
         } else {
             setUser(localUserData);
+            setEditDesc(localUserData.descriere || "");
         }
 
         const prodRes = await fetch('http://localhost:3000/api/products');
@@ -74,12 +82,36 @@ const ProfilePage = () => {
     fetchData();
   }, [navigate]);
 
+  const handleUpdateDescription = async () => {
+    try {
+        const response = await fetch(`http://localhost:3000/api/users/update/${user.id_utilizator}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ descriere: editDesc })
+        });
+
+        if (response.ok) {
+            const updatedUser = { ...user, descriere: editDesc };
+            setUser(updatedUser);
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            setIsEditing(false); 
+            alert("Descriere actualizată!");
+        } else {
+            alert("Nu s-a putut actualiza descrierea.");
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Eroare la server.");
+    }
+  };
+
   const handleAddProduct = async (e) => {
     e.preventDefault();
     if (!newItem.denumire_produs || !newItem.data_expirare) {
         alert("Te rugăm să completezi numele și data expirării!");
         return;
     }
+
     const formData = new FormData();
     formData.append('denumire_produs', newItem.denumire_produs);
     formData.append('categorie', newItem.categorie);
@@ -100,13 +132,14 @@ const ProfilePage = () => {
         if (response.ok) {
             const result = await response.json();
             setProducts([...products, result.product]);
-            setShowModal(false);
+            setIsAddModalOpen(false);
             setNewItem({ denumire_produs: '', categorie: 'Altele', cantitate: 1, data_expirare: '' });
             triggerRefresh();
             alert("Produs adăugat cu succes!");
             setSelectedFile(null);
         } else {
-            alert("Eroare la adăugare produs.");
+            const errorData = await response.json();
+            alert("Eroare la adăugare produs: " + (errorData.message || "Necunoscută"));
         }
     } catch (error) {
         console.error(error);
@@ -133,26 +166,6 @@ const ProfilePage = () => {
       }
   };
 
-  const handleImageChange = (e) => {
-      alert("Funcționalitatea de upload necesită configurare în Backend (Multer).");
-  };
-
-  const getDaysLeft = (dateString) => {
-    if (!dateString) return "N/A";
-    const today = new Date();
-    const expDate = new Date(dateString);
-    const diffTime = expDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays < 0 ? "Expirat" : `${diffDays} zile`;
-  };
-
-  const getProgress = (dateString) => {
-    const days = parseInt(getDaysLeft(dateString));
-    if (isNaN(days) || days < 0) return 0;
-    if (days > 30) return 100;
-    return (days / 30) * 100;
-  };
-
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center text-emerald-600">
@@ -166,11 +179,11 @@ const ProfilePage = () => {
   return (
     <div className="w-full max-w-5xl mx-auto font-sans relative">
       
-      {showModal && (
+      {isAddModalOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
               <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 relative animate-in fade-in zoom-in duration-200">
                   <button 
-                      onClick={() => setShowModal(false)}
+                      onClick={() => setIsAddModalOpen(false)}
                       className="absolute top-5 right-5 text-gray-400 hover:text-red-500 transition-colors bg-gray-50 p-2 rounded-full"
                   >
                       <X size={20} />
@@ -269,17 +282,8 @@ const ProfilePage = () => {
           </div>
       )}
 
-      <div className="flex justify-between items-center mb-8">
+      <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-800">PROFIL</h1>
-        <div className="flex items-center gap-4">
-             <div className="flex items-center gap-2">
-                <div className="text-right hidden md:block">
-                    <p className="text-sm font-bold text-gray-800">{user?.nume} {user?.prenume}</p>
-                    <p className="text-xs text-emerald-600 font-semibold">{user?.email}</p>
-                </div>
-                <img src={avatarUrl} alt="Avatar" className="w-10 h-10 rounded-full bg-emerald-100 border-2 border-white shadow-sm" />
-             </div>
-        </div>
       </div>
 
       <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8 flex flex-col md:flex-row items-center gap-8 mb-10 relative overflow-hidden group">
@@ -289,13 +293,6 @@ const ProfilePage = () => {
               alt="Profile" 
               className="w-36 h-36 rounded-full bg-emerald-50 object-cover border-[6px] border-white shadow-lg" 
             />
-            <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden" accept="image/*" />
-            <button 
-                onClick={() => fileInputRef.current.click()}
-                className="absolute bottom-1 right-1 p-3 bg-white text-gray-600 rounded-full shadow-md hover:bg-emerald-50 hover:text-emerald-600 transition-all active:scale-95"
-            >
-              <Camera size={20} />
-            </button>
         </div>
 
         <div className="flex-1 text-center md:text-left space-y-4 z-10">
@@ -308,15 +305,55 @@ const ProfilePage = () => {
             
             <div className="relative p-4 bg-emerald-50/50 rounded-2xl max-w-xl mx-auto md:mx-0 border border-emerald-100/50">
                 <Quote size={24} className="absolute -top-2 -left-2 text-emerald-300 fill-emerald-100 rotate-180" />
-                <p className="text-gray-600 italic leading-relaxed pl-6 relative z-10 font-medium">
-                    "{user?.descriere || "Nu există o descriere în baza de date."}"
-                </p>
+                
+                {isEditing ? (
+                    <div className="relative z-10 flex gap-2 items-start">
+                        <textarea 
+                            className="w-full p-2 rounded-lg border border-emerald-300 focus:ring-2 focus:ring-emerald-500 outline-none text-gray-700 bg-white"
+                            rows="3"
+                            value={editDesc}
+                            onChange={(e) => setEditDesc(e.target.value)}
+                        />
+                        <div className="flex flex-col gap-2">
+                            <button 
+                                onClick={handleUpdateDescription}
+                                className="p-1.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 shadow-sm"
+                                title="Salvează"
+                            >
+                                <Check size={18} />
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    setIsEditing(false);
+                                    setEditDesc(user.descriere || "");
+                                }}
+                                className="p-1.5 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 shadow-sm"
+                                title="Anulează"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="relative z-10 group/desc">
+                         <p className="text-gray-600 italic leading-relaxed pl-6 font-medium pr-8 min-h-[3rem]">
+                            "{user?.descriere || "Nu există o descriere."}"
+                        </p>
+                        <button 
+                            onClick={() => setIsEditing(true)}
+                            className="absolute top-0 right-0 p-1.5 text-emerald-400 hover:text-emerald-600 hover:bg-emerald-100 rounded-lg transition-all opacity-0 group-hover/desc:opacity-100"
+                            title="Editează descrierea"
+                        >
+                            <Pencil size={16} />
+                        </button>
+                    </div>
+                )}
             </div>
 
             <div className="flex justify-center md:justify-start gap-10 mt-8">
                 <div className="text-center">
                   <p className="text-3xl font-black text-emerald-600">{products.length}</p>
-                  <p className="text-xs text-gray-400 font-bold tracking-wider uppercase mt-1">Produse Salvate</p>
+                  <p className="text-xs text-gray-400 font-bold tracking-wider uppercase mt-1">Produse in Frigider</p>
                 </div>
             </div>
         </div>
@@ -324,11 +361,11 @@ const ProfilePage = () => {
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <span className="text-emerald-500 text-3xl inline-block transform -rotate-12">Ψ</span> Frigiderul Meu
+            <span className="text-emerald-500 text-3xl inline-block transform -rotate-12"></span>Frigiderul Meu
         </h2>
         <button 
-            onClick={() => setShowModal(true)}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-orange-200 flex items-center gap-2 transition-transform transform hover:-translate-y-0.5 active:scale-95"
+            onClick={() => setIsAddModalOpen(true)}
+            className="hidden md:flex bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-orange-200 items-center gap-2 transition-transform transform hover:-translate-y-0.5 active:scale-95"
         >
             <Plus size={20} /> Adaugă în Listă
         </button>
@@ -336,7 +373,7 @@ const ProfilePage = () => {
 
       {products.length === 0 ? (
           <div className="text-center py-16 bg-gray-50 rounded-[2rem] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-4">
-              <div className="text-6xl">🍎</div>
+              <div className="text-6xl">🍃</div>
               <p className="text-gray-500 font-medium text-lg">Frigiderul tău este gol!</p>
               <p className="text-sm text-gray-400">Apasă pe butonul portocaliu pentru a adăuga primul produs.</p>
           </div>

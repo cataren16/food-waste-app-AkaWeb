@@ -20,6 +20,11 @@ module.exports = (sequelize) => {
             allowNull: false,
             field: 'denumire_produs'
         },
+        imagine: {
+            type: DataTypes.STRING, 
+            allowNull: true,        
+            field: 'imagine'
+        },
         categorie: {                
             type: DataTypes.TEXT,
             allowNull: true,
