@@ -7,6 +7,7 @@ const ProfilePage = () => {
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [nrPrieteni, setNrPrieteni] = useState(0);
   
   const [isEditing, setIsEditing] = useState(false);
   const [editDesc, setEditDesc] = useState('');
@@ -69,6 +70,12 @@ const ProfilePage = () => {
           const allProducts = await prodRes.json();
           const myProducts = allProducts.filter(p => String(p.id_utilizator) === String(userId));
           setProducts(myProducts);
+        }
+
+        const friendsRes = await fetch(`http://localhost:3000/api/friends/list/${userId}`);
+        if (friendsRes.ok) {
+            const data = await friendsRes.json();
+            setNrPrieteni(data.prietenii ? data.prietenii.length : 0);
         }
 
       } catch (err) {
@@ -350,10 +357,15 @@ const ProfilePage = () => {
                 )}
             </div>
 
-            <div className="flex justify-center md:justify-start gap-10 mt-8">
+            <div className="flex justify-center md:justify-start gap-12 mt-8">
+                <div className="text-center border-r border-gray-100 pr-12">
+                <p className="text-3xl font-black text-emerald-600">{products.length}</p>
+                <p className="text-[10px] text-gray-400 font-bold tracking-widest uppercase mt-1">Produse</p>
+                </div>
+
                 <div className="text-center">
-                  <p className="text-3xl font-black text-emerald-600">{products.length}</p>
-                  <p className="text-xs text-gray-400 font-bold tracking-wider uppercase mt-1">Produse in Frigider</p>
+                <p className="text-3xl font-black text-orange-500">{nrPrieteni}</p>
+                <p className="text-[10px] text-gray-400 font-bold tracking-widest uppercase mt-1">Prieteni</p>
                 </div>
             </div>
         </div>
