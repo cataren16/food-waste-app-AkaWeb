@@ -9,7 +9,16 @@ const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development'; 
 
 const configPath = path.join(__dirname, '..', 'config', 'config.json');
-const config = require(configPath)[env]; 
+const config = require(configPath)[env];
+
+if (config.dialect === 'sqlite') {
+  if (process.env.SQLITE_PATH) {
+    config.storage = process.env.SQLITE_PATH;
+  }
+  if (config.storage) {
+    fs.mkdirSync(path.dirname(config.storage), { recursive: true });
+  }
+}
 
 const db = {};
 
