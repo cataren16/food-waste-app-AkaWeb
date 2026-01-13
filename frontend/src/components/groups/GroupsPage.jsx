@@ -485,8 +485,6 @@ export default function GroupsPage() {
         onClose={() => setIsProductsOpen(false)}
         group={
           selectedGroup
-            ? { id: selectedGroup.id_grup, name: selectedGroup.nume_grup, dietLabel: selectedGroup.status_dieta }
-            : null
         }
         products={selectedGroupProducts}
         myId={MY_ID}
