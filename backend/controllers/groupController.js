@@ -19,7 +19,9 @@ exports.creeazaGrup= async(req,res)=>{
             id_grup:grupNou.id_grup,
             id_utilizator:id_admin
         })
-         return res.status(201).json({message:"Creare grup realizata cu succes!"})
+         return res.status(201).json({
+            message:"Creare grup realizata cu succes!",
+            grup:grupNou})
 }
 catch(error)
 {
@@ -129,7 +131,7 @@ exports.adaugaMembru= async (req,res)=>{
                 },
                 include:[{
                     model:Grup,
-                    attributes:['id_grup', 'nume_grup', 'descriere', 'id_admin']
+                    attributes:['id_grup', 'nume_grup', 'descriere', 'id_admin', 'status_dieta']
                 }]
             })
 

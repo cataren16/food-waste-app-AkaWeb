@@ -96,7 +96,7 @@ export default function GroupProductsModal({
           </button>
 
           <div className="flex items-center gap-4">
-            <TopBadge label={(group.dietLabel || "OMNIVOR").toUpperCase()} />
+            <TopBadge label={String(group.status_dieta ?? "OMNIVOR").toUpperCase()} />
             <span className="text-sm font-semibold text-white/80">
               {products.length} produse active
             </span>
