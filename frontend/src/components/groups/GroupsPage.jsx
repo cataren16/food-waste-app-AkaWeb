@@ -6,7 +6,7 @@ import GroupSettingsModal from "./GroupSettingsModal";
 import GroupProductsModal from "./GroupProductsModal";
 import SelectFromFridgeModal from "./SelectFromFridgeModal";
 
-const API_BASE = "http://localhost:3000/api";
+const API_BASE = "https://food-waste-akaweb-dwcdcearcweeeret.canadacentral-01.azurewebsites.net/api";
 
 async function apiFetch(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, {

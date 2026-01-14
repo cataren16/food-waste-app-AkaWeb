@@ -1,10 +1,12 @@
 import React from "react";
 import { Trash2 } from "lucide-react";
 
+const API_URL = "https://food-waste-akaweb-dwcdcearcweeeret.canadacentral-01.azurewebsites.net";
+
 const ProductCard = ({ product, onClaim, onDelete, isProfile = false }) => {
     
     const imageUrl = product.imagine 
-        ? `http://localhost:3000/${product.imagine}` 
+        ? `${API_URL}/${product.imagine}` 
         : "https://placehold.co/400x300?text=Fara+Imagine";
 
     const getDaysLeft = (dateString) => {
