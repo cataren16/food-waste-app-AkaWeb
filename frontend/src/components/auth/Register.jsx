@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 
 const API_URL = "https://food-waste-akaweb-dwcdcearcweeeret.canadacentral-01.azurewebsites.net";
 
-
 const Register = () => {
   const [formData, setFormData] = useState({
     nume: '', prenume: '', email: '', parola: ''

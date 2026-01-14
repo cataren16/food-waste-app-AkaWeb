@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Leaf, Sprout, Heart, Medal, Trophy } from 'lucide-react';
 import { getCurrentLevel } from '../utils/Gamification';
 
+const API_URL = "https://food-waste-akaweb-dwcdcearcweeeret.canadacentral-01.azurewebsites.net";
+
 const iconMap = {
   Sprout: <Sprout size={18} strokeWidth={2.5} />,
   Leaf: <Leaf size={18} strokeWidth={2.5} />,
@@ -33,7 +35,7 @@ const GamificationCard = ({refreshTrigger}) => {
         const userObj= JSON.parse(storedUser);
         const userId=userObj.id_utilizator;
         try{
-            const response = await fetch(`http://localhost:3000/api/users/${userId}`);
+            const response = await fetch(`${API_URL}/api/users/${userId}`);
             if(response.ok)
             {
                 const data = await response.json();

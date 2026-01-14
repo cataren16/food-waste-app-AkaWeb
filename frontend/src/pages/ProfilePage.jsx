@@ -3,6 +3,8 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Plus, Loader, Quote, X, Camera, Pencil, Check } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 
+const API_URL = "https://food-waste-akaweb-dwcdcearcweeeret.canadacentral-01.azurewebsites.net";
+
 const ProfilePage = () => {
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
@@ -53,7 +55,7 @@ const ProfilePage = () => {
         setLoading(true);
         const userId = localUserData.id_utilizator;
 
-        const userRes = await fetch(`http://localhost:3000/api/users/${userId}`);
+        const userRes = await fetch(`${API_URL}/api/users/${userId}`);
         
         if (userRes.ok) {
             const freshUserData = await userRes.json();
@@ -65,14 +67,14 @@ const ProfilePage = () => {
             setEditDesc(localUserData.descriere || "");
         }
 
-        const prodRes = await fetch('http://localhost:3000/api/products');
+        const prodRes = await fetch(`${API_URL}/api/products`);
         if (prodRes.ok) {
           const allProducts = await prodRes.json();
           const myProducts = allProducts.filter(p => String(p.id_utilizator) === String(userId));
           setProducts(myProducts);
         }
 
-        const friendsRes = await fetch(`http://localhost:3000/api/friends/list/${userId}`);
+        const friendsRes = await fetch(`${API_URL}/api/friends/list/${userId}`);
         if (friendsRes.ok) {
             const data = await friendsRes.json();
             setNrPrieteni(data.prietenii ? data.prietenii.length : 0);
@@ -91,7 +93,7 @@ const ProfilePage = () => {
 
   const handleUpdateDescription = async () => {
     try {
-        const response = await fetch(`http://localhost:3000/api/users/update/${user.id_utilizator}`, {
+        const response = await fetch(`${API_URL}/api/users/update/${user.id_utilizator}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ descriere: editDesc })
@@ -131,7 +133,7 @@ const ProfilePage = () => {
     }
 
     try {
-        const response = await fetch('http://localhost:3000/api/products/add', {
+        const response = await fetch(`${API_URL}/api/products/add`, {
             method: 'POST',
             body: formData
         });
@@ -158,7 +160,7 @@ const ProfilePage = () => {
       if(!confirm("Sigur vrei să ștergi acest produs?")) return;
 
       try {
-          const response = await fetch(`http://localhost:3000/api/products/delete/${id}`, {
+          const response = await fetch(`${API_URL}/api/products/delete/${id}`, {
               method: 'DELETE'
           });
 

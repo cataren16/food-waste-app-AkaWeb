@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { data } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 
+const API_URL = "https://food-waste-akaweb-dwcdcearcweeeret.canadacentral-01.azurewebsites.net";
+
 const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -35,7 +37,7 @@ const FeedPage = () => {
                     return;
                 }
 
-                const response = await fetch(`http://localhost:3000/api/marketplace/feed?userId=${storedUser.id_utilizator}`);
+                const response = await fetch(`${API_URL}/api/marketplace/feed?userId=${storedUser.id_utilizator}`);
                 if(!response.ok){
                     throw new Error("Eroare la preluarea produselor.");
                 }
@@ -62,7 +64,7 @@ const FeedPage = () => {
     const handleConfirmClaim = async () => {
         const storedUser = JSON.parse(localStorage.getItem("user"));
         try{
-            const response = await fetch(`http://localhost:3000/api/marketplace/claim`, {
+            const response = await fetch(`${API_URL}/api/marketplace/claim`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
