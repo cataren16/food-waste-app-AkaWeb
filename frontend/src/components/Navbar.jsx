@@ -3,9 +3,10 @@ import {Search,Bell,Dot,Leaf} from 'lucide-react';
 import Searchbar from './Searchbar';
 import MobileSearchOverlay from './MobileSearchOverlay';
 import ResultList from './ResultsList';
+import { useNavigate } from 'react-router-dom';
+
 
 const API_URL = "https://food-waste-akaweb-dwcdcearcweeeret.canadacentral-01.azurewebsites.net";
-
 
 const Navbar = ()=>{
 
@@ -27,6 +28,7 @@ const Navbar = ()=>{
     const notifyRef = useRef(null);
     const [systemNotifications, setSystemNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
+    const navigate = useNavigate();
 
 
     const handleMobileOverlay = ()=>{
@@ -499,9 +501,12 @@ loadingFriends={loadingFriends}></ResultList>
                     </div>
 
                     <button 
-                        onClick={() => { window.location.href = '/history'; setIsNotifyOpen(false); }}
+                        onClick={() => {
+                            navigate('/history');
+                            setIsNotifyOpen(false);
+                        }}
                         className="w-full p-3 bg-gray-50 text-xs font-bold text-emerald-600 hover:bg-emerald-100 transition-colors"
-                    >
+                        >
                         Vezi tot istoricul
                     </button>
                 </div>
