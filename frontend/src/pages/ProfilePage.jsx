@@ -135,11 +135,9 @@ const ProfilePage = () => {
             setIsAddModalOpen(false);
             setNewItem({ denumire_produs: '', categorie: 'Altele', cantitate: 1, data_expirare: '' });
             triggerRefresh();
-            alert("Produs adăugat cu succes!");
             setSelectedFile(null);
         } else {
             const errorData = await response.json();
-            alert("Eroare la adăugare produs: " + (errorData.message || "Necunoscută"));
         }
     } catch (error) {
         console.error(error);
