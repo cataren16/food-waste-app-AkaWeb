@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { X, Plus, Users } from "lucide-react";
 
 function TopBadge({ label }) {
@@ -9,8 +9,9 @@ function TopBadge({ label }) {
   );
 }
 
-function ProductCard({ product, myId }) {
-  const isMine = typeof product.ownerId !== "undefined" && String(product.ownerId) === String(myId);
+function ProductCard({ product, myId, onClaim, claiming }) {
+  const ownerId = product.ownerId ?? product.id_utilizator ?? product.owner?.id_utilizator;
+  const isMine = typeof ownerId !== "undefined" && String(ownerId) === String(myId);
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-4">
@@ -32,12 +33,15 @@ function ProductCard({ product, myId }) {
 
       <button
         type="button"
-        disabled
+        disabled={isMine || claiming}
+        onClick={() => !isMine && !claiming && onClaim?.(product)}
         className={`mt-auto w-full rounded-xl font-extrabold py-3 transition ${
-          isMine ? "bg-gray-100 text-gray-300 cursor-not-allowed" : "bg-gray-100 text-gray-300 cursor-not-allowed"
+          isMine || claiming
+            ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+            : "bg-emerald-500 text-white hover:bg-emerald-600"
         }`}
       >
-        {isMine ? "Produsul tău" : "Claim (dezactivat)"}
+        {isMine ? "Produsul tău" : claiming ? "Se trimite..." : "Claim"}
       </button>
     </div>
   );
@@ -66,13 +70,65 @@ export default function GroupProductsModal({
   products = [],
   myId,
   onOpenAddProduct,
-}) {
+})
+
+{
+  const [claimingId, setClaimingId] = useState(null);
+  const [localProducts, setLocalProducts] = useState(products);
+
+  useEffect(() => {
+    setLocalProducts(products);
+  }, [products]);
+
   useEffect(() => {
     if (!isOpen) return;
     const onKeyDown = (e) => e.key === "Escape" && onClose?.();
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isOpen, onClose]);
+
+  const handleClaim = async (product) => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+
+    if (!storedUser?.id_utilizator) {
+      alert("Nu ești logat.");
+      return;
+    }
+
+    const productId = product.id_produs ?? product.id;
+    if (!productId) {
+      alert("Produs invalid (lipsește id-ul).");
+      return;
+    }
+    try {
+      setClaimingId(productId);
+
+      const response = await fetch(`http://localhost:3000/api/marketplace/claim`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id_produs: productId,
+          id_solicitant: storedUser.id_utilizator,
+          nr_bucati: 1,
+        }),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        alert("Solicitare trimisă! Proprietarul va fi notificat.");
+        setLocalProducts((prev) =>
+          prev.filter((p) => (p.id_produs ?? p.id) !== productId)
+        );
+      } else {
+        alert(result?.message || "Eroare la claim produs.");
+      }
+    } catch (err) {
+      console.error("Eroare la claim produs", err);
+      alert("Eroare de conexiune cu serverul.");
+    } finally {
+      setClaimingId(null);
+    }
+  };
 
   if (!isOpen || !group) return null;
 
@@ -98,7 +154,7 @@ export default function GroupProductsModal({
           <div className="flex items-center gap-4">
             <TopBadge label={String(group.status_dieta ?? "OMNIVOR").toUpperCase()} />
             <span className="text-sm font-semibold text-white/80">
-              {products.length} produse active
+              {localProducts.length} produse active
             </span>
           </div>
 
@@ -110,9 +166,18 @@ export default function GroupProductsModal({
         <div className="max-h-[70vh] overflow-y-auto p-4 md:p-8 bg-gray-50">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             <AddProductCard onOpen={onOpenAddProduct} />
-            {products.map((p) => (
-              <ProductCard key={p.id} product={p} myId={myId} />
-            ))}
+            {localProducts.map((p) => {
+              const pid = p.id_produs ?? p.id;
+              return (
+                <ProductCard
+                  key={pid}
+                  product={p}
+                  myId={myId}
+                  onClaim={handleClaim}
+                  claiming={claimingId === pid}
+                />
+              );
+            })}
           </div>
         </div>
       </div>
