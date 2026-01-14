@@ -55,6 +55,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_6435107A315C428988C023A28564C62F }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_17DAE5C2D3074E6599564FD65ABE82E0 }}
 
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
@@ -64,3 +68,4 @@ jobs:
           package: ./backend
 
           
+
