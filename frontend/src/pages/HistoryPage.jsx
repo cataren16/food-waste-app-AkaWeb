@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { CheckCircle2, XCircle, Clock, History, ArrowUpRight, ArrowDownLeft, Inbox, User } from 'lucide-react';
 
+const API_URL = "https://food-waste-akaweb-dwcdcearcweeeret.canadacentral-01.azurewebsites.net";
+
 const HistoryPage = () => {
   const [activeTab, setActiveTab] = useState('incoming'); 
   const [data, setData] = useState({ incoming: [], outgoing: [], history: [] });
@@ -27,9 +29,9 @@ const HistoryPage = () => {
     setLoading(true);
     try {
       const [incRes, outRes, histRes] = await Promise.all([
-        fetch(`http://localhost:3000/api/marketplace/incoming-claims?userId=${user.id_utilizator}`),
-        fetch(`http://localhost:3000/api/marketplace/my-claims?userId=${user.id_utilizator}`),
-        fetch(`http://localhost:3000/api/marketplace/transactions-history?userId=${user.id_utilizator}`)
+        fetch(`${API_URL}/api/marketplace/incoming-claims?userId=${user.id_utilizator}`),
+        fetch(`${API_URL}/api/marketplace/my-claims?userId=${user.id_utilizator}`),
+        fetch(`${API_URL}/api/marketplace/transactions-history?userId=${user.id_utilizator}`)
       ]);
 
       const incoming = await incRes.json();
@@ -52,7 +54,7 @@ const HistoryPage = () => {
 
   const handleAction = async (claimId, action) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/marketplace/handle-claim`, {
+      const response = await fetch(`${API_URL}/api/marketplace/handle-claim`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

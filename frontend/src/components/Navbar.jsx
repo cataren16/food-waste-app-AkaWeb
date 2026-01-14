@@ -4,6 +4,8 @@ import Searchbar from './Searchbar';
 import MobileSearchOverlay from './MobileSearchOverlay';
 import ResultList from './ResultsList';
 
+const API_URL = "https://food-waste-akaweb-dwcdcearcweeeret.canadacentral-01.azurewebsites.net";
+
 
 const Navbar = ()=>{
 
@@ -37,7 +39,7 @@ const Navbar = ()=>{
 
    const handleSendRequest = async (id_prieten) => {
   try {
-    const res = await fetch("http://localhost:3000/api/friends/request", {
+    const res = await fetch(`${API_URL}/api/friends/request`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id_eu: myId, id_prieten }),
@@ -63,7 +65,7 @@ const Navbar = ()=>{
 
     const handleAccept = async (id_prieten) => {
   try {
-    const res = await fetch("http://localhost:3000/api/friends/accept", {
+    const res = await fetch(`${API_URL}/api/friends/accept`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id_eu: myId, id_prieten }),
@@ -75,7 +77,7 @@ const Navbar = ()=>{
       alert(data.message || "Eroare la acceptare");
       return;
     }
-    const resFriends = await fetch(`http://localhost:3000/api/friends/list/${myId}`);
+    const resFriends = await fetch(`${API_URL}/api/friends/list/${myId}`);
     const dataFriends = await resFriends.json();
     if (resFriends.ok) setFriends(dataFriends.prietenii || []);
 
@@ -93,7 +95,7 @@ const Navbar = ()=>{
 
     const handleDecline = async (id_prieten) => {
   try {
-    const res = await fetch("http://localhost:3000/api/friends/delete", {
+    const res = await fetch(`${API_URL}/api/friends/delete`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id_eu: myId, id_prieten }),
@@ -119,7 +121,7 @@ const Navbar = ()=>{
 
 const handleCancelRequest = async (id_prieten) => {
   try {
-    const res = await fetch("http://localhost:3000/api/friends/request/cancel", {
+    const res = await fetch(`${API_URL}/api/friends/request/cancel`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id_eu: myId, id_prieten }),
@@ -163,7 +165,7 @@ try { data = await res.json(); } catch {}
             try{
                 setLoading(true)
 
-                const res= await fetch(`http://localhost:3000/api/friends/search?q=${encodeURIComponent(searchText)}`);
+                const res= await fetch(`${API_URL}/api/friends/search?q=${encodeURIComponent(searchText)}`);
                 const data = await res.json();
 
                 if(res.ok)
@@ -225,7 +227,7 @@ try { data = await res.json(); } catch {}
 
         if (newState && unreadCount > 0) {
             try {
-                await fetch(`http://localhost:3000/api/notifications/mark-read`, {
+                await fetch(`${API_URL}/api/notifications/mark-read`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: myId })
@@ -239,7 +241,7 @@ try { data = await res.json(); } catch {}
 
       const handleDeleteSingleNotification = async (idNotificare) => {
       try {
-          const res = await fetch(`http://localhost:3000/api/notifications/${idNotificare}`, {
+          const res = await fetch(`${API_URL}/api/notifications/${idNotificare}`, {
               method: 'DELETE',
           });
 
@@ -264,7 +266,7 @@ try { data = await res.json(); } catch {}
         if (!window.confirm("Ești sigur că vrei să ștergi toate notificările de sistem?")) return;
 
         try {
-            const res = await fetch(`http://localhost:3000/api/notifications/all/${myId}`, {
+            const res = await fetch(`${API_URL}/api/notifications/all/${myId}`, {
                 method: 'DELETE'
             });
 
@@ -298,7 +300,7 @@ try { data = await res.json(); } catch {}
             const fetchCereriPrimite = async () =>{
                 try{
                     setLoadingRequests(true);
-                    const res = await fetch(`http://localhost:3000/api/friends/requests/received/${id_eu}`);
+                    const res = await fetch(`${API_URL}/api/friends/requests/received/${id_eu}`);
                     const data= await res.json();
 
                     if(res.ok)
@@ -323,7 +325,7 @@ try { data = await res.json(); } catch {}
             const fetchCereriTrimise = async () => {
   try {
     setLoadingSentRequests(true);
-    const res = await fetch(`http://localhost:3000/api/friends/requests/sent/${id_eu}`);
+    const res = await fetch(`${API_URL}/api/friends/requests/sent/${id_eu}`);
     const data = await res.json();
 
     if (res.ok) {
@@ -341,7 +343,7 @@ try { data = await res.json(); } catch {}
   const fetchFriends = async () => {
   try {
     setLoadingFriends(true);
-    const res = await fetch(`http://localhost:3000/api/friends/list/${id_eu}`);
+    const res = await fetch(`${API_URL}/api/friends/list/${id_eu}`);
     const data = await res.json();
 
     if (res.ok) {
@@ -359,11 +361,11 @@ try { data = await res.json(); } catch {}
 
 const fetchSystemNotifications = async () => {
         try {
-            const res = await fetch(`http://localhost:3000/api/notifications?userId=${id_eu}`);
+            const res = await fetch(`${API_URL}/api/notifications?userId=${id_eu}`);
             const data = await res.json();
             if (res.ok) setSystemNotifications(data);
 
-            const resUnread = await fetch(`http://localhost:3000/api/notifications/unread?userId=${id_eu}`);
+            const resUnread = await fetch(`${API_URL}/api/notifications/unread?userId=${id_eu}`);
             const dataUnread = await resUnread.json();
             if (resUnread.ok) setUnreadCount(dataUnread.unread);
         } catch (err) {
@@ -373,7 +375,7 @@ const fetchSystemNotifications = async () => {
 
     const fetchProductNotifications = async () => {
         try {
-            const res = await fetch(`http://localhost:3000/api/marketplace/incoming-claims?userId=${id_eu}`);
+            const res = await fetch(`${API_URL}/api/marketplace/incoming-claims?userId=${id_eu}`);
             const data = await res.json();
             if (res.ok) {
                 setProductNotifications(data.filter(req => req.status_solicitare === 0));
