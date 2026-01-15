@@ -7,7 +7,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [parola, setParola] = useState('');
   
-  // 1. STAREA PENTRU OCHIȘOR
+  // starea pentru ochisorul de vizualizare a parolei
   const [showPassword, setShowPassword] = useState(false);
   
   const [error, setError] = useState('');
@@ -31,21 +31,18 @@ const Login = () => {
             if (data.user) {
                 localStorage.setItem('user', JSON.stringify(data.user));
             }
-
-            alert("Autentificare reușită! 🌿");
             navigate('/feed'); 
+            
         } else {
-            console.error("4. [Eroare] Login reușit dar lipsește token-ul din răspuns!");
-            setError('Eroare internă: Serverul nu a trimis token-ul.');
+            setError('Eroare internă');
         }
 
       } else {
-        // Aici ajungem dacă parola e greșită sau userul nu există
         setError(data.message || 'Date incorecte');
       }
     } catch (err) {
-      console.error("5. [Eroare Rețea]", err);
-      setError('Nu s-a putut conecta la server. Verifică dacă serverul (port 3000) este pornit.');
+      console.error("Eroare retea", err);
+      setError('Nu s-a putut conecta la server. Verifică dacă serverul este pornit.');
     }
   };
 
@@ -121,7 +118,6 @@ const Login = () => {
           <p className="text-sm font-bold text-emerald-700">
             Nu ai cont? <Link to="/register" className="hover:underline">Creează unul</Link>
           </p>
-          <a href="#" className="block text-xs text-gray-400 hover:text-gray-600">Am uitat parola</a>
         </div>
       </div>
     </div>
